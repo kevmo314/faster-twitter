@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <base target="_blank" />
     <style>
       body,
       html {
@@ -329,20 +330,18 @@
           <a
             class="display-name"
             href="https://twitter.com/{{ .Author.Username }}"
-            target="_blank"
             >{{ .Author.Name }}</a
           >
           <div class="username">
             @{{ .Author.Username }} &middot;
             <a
               href="https://twitter.com/intent/follow?screen_name={{ .Author.Username }}"
-              target="_blank"
               class="follow"
               >Follow</a
             >
           </div>
         </div>
-        <a class="logo" href="{{ .Permalink }}" target="_blank">
+        <a class="logo" href="{{ .Permalink }}">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <g>
               <path
@@ -364,14 +363,11 @@
       {{ end }} {{ end }}
       <div class="footer">
         <div class="timestamp">
-          <a href="{{ .Permalink }}" target="_blank">
-            {{ .Time }} &middot; {{ .Date }}
-          </a>
+          <a href="{{ .Permalink }}"> {{ .Time }} &middot; {{ .Date }} </a>
         </div>
         <a
           class="info"
           href="https://help.twitter.com/en/twitter-for-websites-ads-info-and-privacy"
-          target="_blank"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <g>
@@ -386,7 +382,6 @@
         <a
           href="https://twitter.com/intent/like?tweet_id={{ .Tweet.ID }}"
           class="metadata-item likes"
-          target="_blank"
         >
           <div class="metadata-icon">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -402,7 +397,6 @@
         <a
           href="https://twitter.com/intent/tweet?in_reply_to={{ .Tweet.ID }}"
           class="metadata-item reply"
-          target="_blank"
         >
           <div class="metadata-icon">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -419,7 +413,6 @@
           href="#"
           onclick="javascript:navigator.share({url: '{{ .Permalink }}'})"
           class="metadata-item share"
-          target="_blank"
         >
           <div class="metadata-icon">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -436,15 +429,15 @@
         </a>
       </div>
       {{if eq .Tweet.PublicMetrics.ReplyCount 0}}
-      <a class="read-more" href="https://twitter.com/explore" target="_blank"
+      <a class="read-more" href="https://twitter.com/explore"
         >Read more on Twitter</a
       >
       {{else if eq .Tweet.PublicMetrics.ReplyCount 1}}
-      <a class="read-more" href="{{ .Permalink }}" target="_blank"
+      <a class="read-more" href="{{ .Permalink }}"
         >Read {{ .Tweet.PublicMetrics.ReplyCount }} reply</a
       >
       {{else}}
-      <a class="read-more" href="{{ .Permalink }}" target="_blank"
+      <a class="read-more" href="{{ .Permalink }}"
         >Read {{ .Tweet.PublicMetrics.ReplyCount }} replies</a
       >
       {{end}}
