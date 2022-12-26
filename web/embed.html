@@ -449,28 +449,16 @@
       {{end}}
     </div>
     <script>
-      (function () {
-        Promise.all(
-          Array.from(document.images)
-            .filter((img) => !img.complete)
-            .map(
-              (img) =>
-                new Promise((resolve) => {
-                  img.onload = img.onerror = resolve;
-                })
-            )
-        ).then(() => {
-          // post the cross domain size
-          window.top.postMessage(
-            {
-              type: "embed-size",
-              height: document.body.scrollHeight,
-              tweetId: "{{ .Tweet.ID }}",
-            },
-            "*"
-          );
-        });
-      })();
+      new ResizeObserver((entries) => {
+        window.top.postMessage(
+          {
+            type: "embed-size",
+            height: document.body.scrollHeight,
+            tweetId: "{{ .Tweet.ID }}",
+          },
+          "*"
+        );
+      }).observe(document.body);
     </script>
   </body>
 </html>
