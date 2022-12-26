@@ -24,13 +24,6 @@ type Tweet struct {
 		QuoteCount   int `json:"quote_count"`
 	} `json:"public_metrics"`
 	Entities struct {
-		Annotations []struct {
-			Start          int     `json:"start"`
-			End            int     `json:"end"`
-			Probability    float64 `json:"probability"`
-			Type           string  `json:"type"`
-			NormalizedText string  `json:"normalized_text"`
-		} `json:"annotations"`
 		URLs []struct {
 			Start       int    `json:"start"`
 			End         int    `json:"end"`
@@ -46,6 +39,7 @@ type Tweet struct {
 			Title       string `json:"title"`
 			Description string `json:"description"`
 			UnwoundURL  string `json:"unwound_url"`
+			MediaKey    string `json:"media_key"`
 		} `json:"urls"`
 		Hashtags []struct {
 			Start int    `json:"start"`
@@ -63,6 +57,9 @@ type Tweet struct {
 			Tag   string `json:"tag"`
 		} `json:"cashtags"`
 	} `json:"entities"`
+	Attachments struct {
+		MediaKeys []string `json:"media_keys"`
+	} `json:"attachments"`
 }
 
 func (t Tweet) RenderHTML() string {
@@ -71,7 +68,7 @@ func (t Tweet) RenderHTML() string {
 		html       []rune
 	}
 
-	mainURLTmpl, err := template.New("tweet").Parse(`<a class="main-url-link" href="{{.URL.URL}}">
+	imageTmpl, err := template.New("tweet").Parse(`<a class="main-url-link" href="{{.URL.URL}}">
 		<div class="main-url-link-image">
 			<img src="{{.Image.URL}}" width="{{.Image.Width}}" height="{{.Image.Height}}">
 		</div>
@@ -91,21 +88,7 @@ func (t Tweet) RenderHTML() string {
 
 	replacements := []Replacement{}
 	for _, u := range t.Entities.URLs {
-		if u.Images != nil {
-			parsed, err := url.Parse(u.ExpandedURL)
-			if err != nil {
-				panic(err)
-			}
-			var mainURLHTML bytes.Buffer
-			mainURLTmpl.Execute(&mainURLHTML, map[string]interface{}{
-				"URL":   u,
-				"Host":  strings.TrimPrefix(parsed.Host, "www."),
-				"Image": u.Images[0],
-			})
-			replacements = append(replacements, Replacement{u.Start, u.End, []rune(mainURLHTML.String())})
-		} else {
-			replacements = append(replacements, Replacement{u.Start, u.End, []rune(`<a href="` + u.URL + `">` + u.DisplayURL + `</a>`)})
-		}
+		replacements = append(replacements, Replacement{u.Start, u.End, []rune(`<a href="` + u.URL + `">` + u.DisplayURL + `</a>`)})
 	}
 	for _, hashtag := range t.Entities.Hashtags {
 		replacements = append(replacements, Replacement{hashtag.Start, hashtag.End, []rune(`<a href="https://twitter.com/hashtag/` + hashtag.Tag + `">#` + hashtag.Tag + `</a>`)})
@@ -126,16 +109,41 @@ func (t Tweet) RenderHTML() string {
 		r := replacements[i]
 		html = append(html[:r.start], append(r.html, html[r.end:]...)...)
 	}
+	for _, u := range t.Entities.URLs {
+		if u.Images != nil {
+			parsed, err := url.Parse(u.ExpandedURL)
+			if err != nil {
+				panic(err)
+			}
+			var mainURLHTML bytes.Buffer
+			imageTmpl.Execute(&mainURLHTML, map[string]interface{}{
+				"URL":   u,
+				"Host":  strings.TrimPrefix(parsed.Host, "www."),
+				"Image": u.Images[0],
+			})
+			html = append(html, []rune(mainURLHTML.String())...)
+		}
+	}
 	return string(html)
 }
 
-// User represents a Twitter User.
-// https://dev.twitter.com/overview/api/users
 type User struct {
 	ID              string `json:"id"`
 	Name            string `json:"name"`
 	Username        string `json:"username"`
 	ProfileImageURL string `json:"profile_image_url"`
+}
+
+type Media struct {
+	Type       string `json:"type"`
+	MediaKey   string `json:"media_key"`
+	DurationMs int    `json:"duration_ms"`
+	Width      int    `json:"width"`
+	Height     int    `json:"height"`
+	Variants   []struct {
+		ContentType string `json:"content_type"`
+		URL         string `json:"url"`
+	} `json:"variants"`
 }
 
 type PublicMetrics struct {

@@ -9,15 +9,12 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/kevmo314/faster-twitter/pkg/types"
 )
-
-const twitterAPIKey = "kNYoLSsjCQrvRNBSNyNR7UV5L"
-const twitterAPISecret = "SdeKRX5kBq1UBeHneENPr8YNirA8BshLNy4LimSyn8QOIHUk5c"
-const twitterBearerToken = "AAAAAAAAAAAAAAAAAAAAAMNFkwEAAAAAkebFYhjEepEY9703pvIR2zKM7%2BY%3DRiK008cIuQgTxbzBMK9zpliixVbTUuECdQcCWtmDx7pChenBZM"
 
 func tzOffset(r *http.Request) time.Duration {
 	tzOffsetStr := r.URL.Query().Get("tz_offset")
@@ -51,6 +48,11 @@ func makeGzipHandler(fn http.HandlerFunc) http.HandlerFunc {
 	}
 }
 func main() {
+	twitterBearerToken := os.Getenv("TWITTER_BEARER_TOKEN")
+	if twitterBearerToken == "" {
+		log.Fatal("TWITTER_BEARER_TOKEN must be set")
+	}
+
 	http.HandleFunc("/embed/", makeGzipHandler(func(w http.ResponseWriter, r *http.Request) {
 		// the tweet id is the last part of the path
 		tweetID := r.URL.Path[len("/embed/"):]
@@ -62,8 +64,9 @@ func main() {
 				Host:   "api.twitter.com",
 				Path:   "/2/tweets/" + tweetID,
 				RawQuery: url.Values{
-					"expansions":   []string{"author_id"},
-					"tweet.fields": []string{"created_at,public_metrics,entities"},
+					"expansions":   []string{"author_id,attachments.media_keys"},
+					"media.fields": []string{"type,url,width,height,preview_image_url,alt_text,duration_ms,variants"},
+					"tweet.fields": []string{"created_at,public_metrics,entities,attachments"},
 					"user.fields":  []string{"name,username,profile_image_url"},
 				}.Encode(),
 			},
@@ -79,17 +82,25 @@ func main() {
 		}
 		defer resp.Body.Close()
 
+		if resp.StatusCode != http.StatusOK {
+			http.Error(w, resp.Status, resp.StatusCode)
+			return
+		}
+
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
+		log.Printf("%s", string(body))
+
 		// decode as a tweet
 		var tweet struct {
 			Data     types.Tweet `json:"data"`
 			Includes struct {
-				Users []types.User `json:"users"`
+				Users []types.User  `json:"users"`
+				Media []types.Media `json:"media"`
 			} `json:"includes"`
 		}
 		if err := json.NewDecoder(bytes.NewReader(body)).Decode(&tweet); err != nil {
@@ -111,6 +122,7 @@ func main() {
 			Date      string
 			Permalink string
 			HTML      template.HTML
+			Media     []types.Media
 		}
 
 		data.Tweet = tweet.Data
@@ -119,6 +131,7 @@ func main() {
 		data.Date = data.Tweet.CreatedAt.Add(tzOffset(r)).Format("Jan 2, 2006")
 		data.Permalink = "https://twitter.com/" + data.Author.Username + "/status/" + data.Tweet.ID
 		data.HTML = template.HTML(data.Tweet.RenderHTML())
+		data.Media = tweet.Includes.Media
 
 		if err := tmpl.Execute(w, data); err != nil {
 			log.Printf("error executing template: %v", err)
@@ -132,5 +145,9 @@ func main() {
 		http.ServeFile(w, r, "web/index.html")
 	})
 
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	port := "8080"
+	if os.Getenv("PORT") != "" {
+		port = os.Getenv("PORT")
+	}
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }

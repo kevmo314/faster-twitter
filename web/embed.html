@@ -7,7 +7,6 @@
       html {
         margin: 0;
         padding: 0;
-        height: 100%;
       }
 
       * {
@@ -27,6 +26,7 @@
 
       .container {
         color: rgb(15, 20, 25);
+        background-color: white;
         border: 1px solid rgb(207, 217, 222);
         border-radius: 12px;
         max-width: 550px;
@@ -103,6 +103,14 @@
         }
       }
 
+      .media video {
+        margin-top: 12px;
+        border: 1px solid rgb(207, 217, 222);
+        border-radius: 12px;
+        overflow: hidden;
+        width: 100%;
+      }
+
       .main-url-link {
         display: flex;
         flex-direction: column;
@@ -145,6 +153,9 @@
       .main-url-link-title {
         color: rgb(15, 20, 25);
         padding: 2px 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .main-url-link-description {
@@ -342,6 +353,15 @@
         </a>
       </div>
       <div class="text">{{ .HTML }}</div>
+      {{ range $m := .Media }} {{ if eq $m.Type "video" }}
+      <div class="media">
+        <video playsinline disablepictureinpicture controls>
+          {{ range $v := $m.Variants }}
+          <source src="{{ $v.URL }}" type="{{ $v.ContentType }}" />
+          {{ end }}
+        </video>
+      </div>
+      {{ end }} {{ end }}
       <div class="footer">
         <div class="timestamp">
           <a href="{{ .Permalink }}" target="_blank">
@@ -418,11 +438,39 @@
       <a class="read-more" href="https://twitter.com/explore" target="_blank"
         >Read more on Twitter</a
       >
+      {{else if eq .Tweet.PublicMetrics.ReplyCount 1}}
+      <a class="read-more" href="{{ .Permalink }}" target="_blank"
+        >Read {{ .Tweet.PublicMetrics.ReplyCount }} reply</a
+      >
       {{else}}
       <a class="read-more" href="{{ .Permalink }}" target="_blank"
         >Read {{ .Tweet.PublicMetrics.ReplyCount }} replies</a
       >
       {{end}}
     </div>
+    <script>
+      (function () {
+        Promise.all(
+          Array.from(document.images)
+            .filter((img) => !img.complete)
+            .map(
+              (img) =>
+                new Promise((resolve) => {
+                  img.onload = img.onerror = resolve;
+                })
+            )
+        ).then(() => {
+          // post the cross domain size
+          window.top.postMessage(
+            {
+              type: "embed-size",
+              height: document.body.scrollHeight,
+              tweetId: "{{ .Tweet.ID }}",
+            },
+            "*"
+          );
+        });
+      })();
+    </script>
   </body>
 </html>
