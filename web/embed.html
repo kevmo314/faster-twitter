@@ -416,7 +416,7 @@
           <div class="metadata-label">Reply</div>
         </a>
         <a
-          href="https://twitter.com/intent/share?tweet_id={{ .Tweet.ID }}"
+          href="javascript:navigator.share({url: '{{ .Permalink }}'})"
           class="metadata-item share"
           target="_blank"
         >
