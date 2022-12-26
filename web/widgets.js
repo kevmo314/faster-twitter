@@ -12,8 +12,11 @@
   // replace it with an iframe pointing at /embed/<tweet-id>
   var href = blockquote.lastElementChild.href;
   var tweetId = href.split("?")[0].split("/").pop();
+  // get the current tz offset
+  var tz = new Date().getTimezoneOffset() + "m";
   var iframe = document.createElement("iframe");
-  iframe.src = "https://platform.fastertwitter.com/embed/" + tweetId;
+  iframe.src =
+    "https://platform.fastertwitter.com/embed/" + tweetId + "?tz_offset=" + tz;
   iframe.width = "100%";
   iframe.allowTransparency = "true";
   iframe.allowFullscreen = "true";
