@@ -127,6 +127,10 @@ func main() {
 		}
 
 		data.Tweet = tweet.Data
+		if len(tweet.Includes.Users) == 0 {
+			http.Error(w, "no user found", http.StatusNotFound)
+			return
+		}
 		data.Author = tweet.Includes.Users[0]
 		data.Time = data.Tweet.CreatedAt.Add(tzOffset(r)).Format("3:04 PM")
 		data.Date = data.Tweet.CreatedAt.Add(tzOffset(r)).Format("Jan 2, 2006")
