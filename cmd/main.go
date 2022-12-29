@@ -116,13 +116,14 @@ func main() {
 		}
 
 		var data struct {
-			Tweet     types.Tweet
-			Author    types.User
-			Time      string
-			Date      string
-			Permalink string
-			HTML      template.HTML
-			Media     []types.Media
+			Tweet           types.Tweet
+			Author          types.User
+			Time            string
+			Date            string
+			Permalink       string
+			HTML            template.HTML
+			Media           []types.Media
+			ShowAttribution bool
 		}
 
 		data.Tweet = tweet.Data
@@ -132,6 +133,7 @@ func main() {
 		data.Permalink = "https://twitter.com/" + data.Author.Username + "/status/" + data.Tweet.ID
 		data.HTML = template.HTML(data.Tweet.RenderHTML())
 		data.Media = tweet.Includes.Media
+		data.ShowAttribution = !r.URL.Query().Has("no-attribution")
 
 		if err := tmpl.Execute(w, data); err != nil {
 			log.Printf("error executing template: %v", err)

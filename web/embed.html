@@ -77,6 +77,22 @@
         font-weight: 700;
       }
 
+      {{ if .ShowAttribution }}
+      .attribution {
+        align-self: flex-start;
+        color: rgb(83, 100, 113);
+        font-size: 12px;
+        line-height: 16px;
+        margin: 4px;
+      }
+
+      @media (max-width: 550px) {
+        .attribution {
+          display: none;
+        }
+      }
+      {{ end }}
+
       .logo {
         align-self: flex-start;
       }
@@ -341,6 +357,11 @@
             >
           </div>
         </div>
+        {{ if .ShowAttribution }}
+        <div class="attribution">
+          <a href="https://platform.fastertwitter.com/">Faster Twitter</a>
+        </div>
+        {{ end }}
         <a class="logo" href="{{ .Permalink }}">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <g>
@@ -363,7 +384,7 @@
       {{ end }} {{ end }}
       <div class="footer">
         <div class="timestamp">
-          <a href="{{ .Permalink }}"> {{ .Time }} &middot; {{ .Date }} </a>
+          <a href="{{ .Permalink }}"> {{ .Time }} &middot; {{ .Date }}</a>
         </div>
         <a
           class="info"

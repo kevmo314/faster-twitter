@@ -16,7 +16,7 @@
   var tz = new Date().getTimezoneOffset() + "m";
   var iframe = document.createElement("iframe");
   iframe.src =
-    "https://platform.fastertwitter.com/embed/" + tweetId + "?tz_offset=" + tz;
+    "https://platform.fastertwitter.com/embed/" + tweetId + "?tz_offset=" + tz + (blockquote.hasAttribute('data-no-attribution') ? '&no_attribution=true' : '');
   iframe.width = "100%";
   iframe.allowTransparency = "true";
   iframe.allowFullscreen = "true";
